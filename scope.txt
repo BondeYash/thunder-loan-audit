@@ -5,3 +5,4 @@ src/interfaces/IThunderLoan.sol
 src/protocol/AssetToken.sol
 src/protocol/OracleUpgradeable.sol
 src/protocol/ThunderLoan.sol
+src/upgradedProtocol/ThunderLoanUpgraded.sol

@@ -92,7 +92,7 @@ The YOUR_NAME_HERE team makes all effort to find as many vulnerabilities in the 
 
 **The findings described in this document correspond the following commit hash:**
 ```
-488dd48689330d0897f187fe84e6e2c2a05f0d80
+ed6725816a3fd286779a39bea91c7eadcfab5920
 ```
 
 ## Scope 
@@ -104,9 +104,11 @@ The YOUR_NAME_HERE team makes all effort to find as many vulnerabilities in the 
 |   #-- ITSwapPool.sol
 |   #-- IThunderLoan.sol
 #-- protocol
-    #-- AssetToken.sol
-    #-- OracleUpgradeable.sol
-    #-- ThunderLoan.sol
+|   #-- AssetToken.sol
+|   #-- OracleUpgradeable.sol
+|   #-- ThunderLoan.sol
+#-- upgradedProtocol
+    #-- ThunderLoanUpgraded.sol
 ```
 
 # Protocol Summary 
@@ -125,11 +127,12 @@ Puppy Rafle is a protocol dedicated to raffling off puppy NFTs with variying rar
 
 | Severity | Number of issues found |
 | -------- | ---------------------- |
-| High     | 1                      |
+| High     | 2                      |
 | Medium   | 2                      |
 | Low      | 3                      |
 | Info     | 1                      |
-| Total    | 0                      |
+| Gas      | 2                      |
+| Total    | 10                     |
 
 # Findings
 
