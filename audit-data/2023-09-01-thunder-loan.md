@@ -98,15 +98,15 @@ The YOUR_NAME_HERE team makes all effort to find as many vulnerabilities in the 
 ## Scope 
 
 ```
-├── interfaces
-│   ├── IFlashLoanReceiver.sol
-│   ├── IPoolFactory.sol
-│   ├── ITSwapPool.sol
-│   #── IThunderLoan.sol
-#── protocol
-    ├── AssetToken.sol
-    ├── OracleUpgradeable.sol
-    #── ThunderLoan.sol
+#-- interfaces
+|   #-- IFlashLoanReceiver.sol
+|   #-- IPoolFactory.sol
+|   #-- ITSwapPool.sol
+|   #-- IThunderLoan.sol
+#-- protocol
+    #-- AssetToken.sol
+    #-- OracleUpgradeable.sol
+    #-- ThunderLoan.sol
 ```
 
 # Protocol Summary 
@@ -193,6 +193,19 @@ You can also see the storage layout difference by running `forge inspect Thunder
 ### [H-2] Unnecessary `updateExchangeRate` in `deposit` function incorrectly updates `exchangeRate` preventing withdraws and unfairly changing reward distribution
 
 **Description:** 
+
+```javascript
+    function deposit(IERC20 token, uint256 amount) external revertIfZero(amount) revertIfNotAllowedToken(token) {
+        AssetToken assetToken = s_tokenToAssetToken[token];
+        uint256 exchangeRate = assetToken.getExchangeRate();
+        uint256 mintAmount = (amount * assetToken.EXCHANGE_RATE_PRECISION()) / exchangeRate;
+        emit Deposit(msg.sender, token, amount);
+        assetToken.mint(msg.sender, mintAmount);
+        uint256 calculatedFee = getCalculatedFee(token, amount);
+        assetToken.updateExchangeRate(calculatedFee);
+        token.safeTransferFrom(msg.sender, address(assetToken), amount);
+    }
+```
 
 **Impact:** 
 
