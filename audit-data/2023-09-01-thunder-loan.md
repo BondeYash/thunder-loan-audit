@@ -54,6 +54,7 @@ Assisting Auditors:
 - [Findings](#findings)
   - [High](#high)
     - [\[H-1\] Mixing up variable location causes storage collisions in `ThunderLoan::s_flashLoanFee` and `ThunderLoan::s_currentlyFlashLoaning`](#h-1-mixing-up-variable-location-causes-storage-collisions-in-thunderloans_flashloanfee-and-thunderloans_currentlyflashloaning)
+    - [\[H-2\] Unnecessary `updateExchangeRate` in `deposit` function incorrectly updates `exchangeRate` preventing withdraws and unfairly changing reward distribution](#h-2-unnecessary-updateexchangerate-in-deposit-function-incorrectly-updates-exchangerate-preventing-withdraws-and-unfairly-changing-reward-distribution)
   - [Medium](#medium)
     - [\[M-1\] Centralization risk for trusted owners](#m-1-centralization-risk-for-trusted-owners)
       - [Impact:](#impact)
@@ -62,6 +63,8 @@ Assisting Auditors:
     - [\[L-1\] Empty Function Body - Consider commenting why](#l-1-empty-function-body---consider-commenting-why)
     - [\[L-2\] Initializers could be front-run](#l-2-initializers-could-be-front-run)
     - [\[L-3\] Missing critial event emissions](#l-3-missing-critial-event-emissions)
+  - [Informational](#informational)
+    - [\[I-1\] Poor Test Coverage](#i-1-poor-test-coverage)
   - [Gas](#gas)
     - [\[GAS-1\] Using bools for storage incurs overhead](#gas-1-using-bools-for-storage-incurs-overhead)
     - [\[GAS-2\] Using `private` rather than `public` for constants, saves gas](#gas-2-using-private-rather-than-public-for-constants-saves-gas)
@@ -89,7 +92,7 @@ The YOUR_NAME_HERE team makes all effort to find as many vulnerabilities in the 
 
 **The findings described in this document correspond the following commit hash:**
 ```
-xxx
+488dd48689330d0897f187fe84e6e2c2a05f0d80
 ```
 
 ## Scope 
@@ -113,8 +116,8 @@ Puppy Rafle is a protocol dedicated to raffling off puppy NFTs with variying rar
 ## Roles
 
 - Owner: The owner of the protocol who has the power to upgrade the implementation. 
-- Fee User: The user who takes a cut of raffle entrance fees. Denominated by the `feeAddress` variable.
-- Raffle Entrant: Anyone who enters the raffle. Denominated by being in the `players` array.
+- Liquidity Provider: A user who deposits assets into the protocol to earn interest. 
+- User: A user who takes out flash loans from the protocol.
 
 # Executive Summary
 
@@ -122,10 +125,10 @@ Puppy Rafle is a protocol dedicated to raffling off puppy NFTs with variying rar
 
 | Severity | Number of issues found |
 | -------- | ---------------------- |
-| High     | 0                      |
-| Medium   | 0                      |
-| Low      | 0                      |
-| Info     | 0                      |
+| High     | 1                      |
+| Medium   | 2                      |
+| Low      | 3                      |
+| Info     | 1                      |
 | Total    | 0                      |
 
 # Findings
@@ -187,6 +190,16 @@ You can also see the storage layout difference by running `forge inspect Thunder
 +    uint256 public constant FEE_PRECISION = 1e18;
 ```
 
+### [H-2] Unnecessary `updateExchangeRate` in `deposit` function incorrectly updates `exchangeRate` preventing withdraws and unfairly changing reward distribution
+
+**Description:** 
+
+**Impact:** 
+
+**Proof of Concept:**
+
+**Recommended Mitigation:** 
+
 ## Medium 
 
 ### [M-1] Centralization risk for trusted owners
@@ -202,7 +215,6 @@ File: src/protocol/ThunderLoan.sol
 
 261:     function _authorizeUpgrade(address newImplementation) internal override onlyOwner { }
 ```
-
 
 ### [M-2] Using TSwap as price oracle leads to price and oracle manipulation attacks
 
@@ -288,6 +300,21 @@ File: src/protocol/ThunderLoan.sol
 +       emit FlashLoanFeeUpdated(newFee); 
     }
 ```
+
+## Informational 
+
+### [I-1] Poor Test Coverage 
+
+```
+Running tests...
+| File                               | % Lines        | % Statements   | % Branches    | % Funcs        |
+| ---------------------------------- | -------------- | -------------- | ------------- | -------------- |
+| src/protocol/AssetToken.sol        | 70.00% (7/10)  | 76.92% (10/13) | 50.00% (1/2)  | 66.67% (4/6)   |
+| src/protocol/OracleUpgradeable.sol | 100.00% (6/6)  | 100.00% (9/9)  | 100.00% (0/0) | 80.00% (4/5)   |
+| src/protocol/ThunderLoan.sol       | 64.52% (40/62) | 68.35% (54/79) | 37.50% (6/16) | 71.43% (10/14) |
+```
+
+**Recommended Mitigation:** Aim to get test coverage up to over 90% for all files. 
 
 ## Gas
 

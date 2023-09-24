@@ -23,6 +23,20 @@ contract ProofOfCodes is ThunderLoanTest {
         assert(feeBeforeUpgrade != feeAfterUpgrade);
     }
 
+    function testRedeemAfterLoan() public setAllowedToken hasDeposits {
+        uint256 amountToBorrow = AMOUNT * 10;
+        vm.startPrank(user);
+        tokenA.mint(address(mockFlashLoanReceiver), AMOUNT);
+        thunderLoan.flashloan(address(mockFlashLoanReceiver), tokenA, amountToBorrow, "");
+        vm.stopPrank();
+
+        uint256 amountToRedeem = type(uint256).max;
+        vm.startPrank(liquidityProvider);
+        vm.expectRevert();
+        thunderLoan.redeem(tokenA, amountToRedeem);
+        vm.stopPrank();
+    }
+
     function testCanManipuleOracleToIgnoreFees() public {
         thunderLoan = new ThunderLoan();
         tokenA = new ERC20Mock();
