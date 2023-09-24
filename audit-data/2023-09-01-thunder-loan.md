@@ -92,7 +92,7 @@ The YOUR_NAME_HERE team makes all effort to find as many vulnerabilities in the 
 
 **The findings described in this document correspond the following commit hash:**
 ```
-ed6725816a3fd286779a39bea91c7eadcfab5920
+026da6e73fde0dd0a650d623d0411547e3188909
 ```
 
 ## Scope 
