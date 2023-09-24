@@ -6,22 +6,26 @@ import { IPoolFactory } from "../interfaces/IPoolFactory.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract OracleUpgradeable is Initializable {
-    address private s_tswap;
+    address private s_poolFactory;
 
-    function __Oracle_init(address tswapAddress) internal onlyInitializing {
-        __Oracle_init_unchained(tswapAddress);
+    function __Oracle_init(address poolFactoryAddress) internal onlyInitializing {
+        __Oracle_init_unchained(poolFactoryAddress);
     }
 
-    function __Oracle_init_unchained(address tswapAddress) internal onlyInitializing {
-        s_tswap = tswapAddress;
+    function __Oracle_init_unchained(address poolFactoryAddress) internal onlyInitializing {
+        s_poolFactory = poolFactoryAddress;
     }
 
     function getPriceInWeth(address token) public view returns (uint256) {
-        address swapPoolOfToken = IPoolFactory(s_tswap).getPool(token);
+        address swapPoolOfToken = IPoolFactory(s_poolFactory).getPool(token);
         return ITSwapPool(swapPoolOfToken).getPriceOfOnePoolTokenInWeth();
     }
 
     function getPrice(address token) external view returns (uint256) {
         return getPriceInWeth(token);
+    }
+
+    function getPoolFactoryAddress() external view returns (address) {
+        return s_poolFactory;
     }
 }

@@ -7,7 +7,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 
 contract AssetToken is ERC20 {
     error AssetToken__onlyThunderLoan();
-    error AssetToken__ExhangeRateCanOnlyIncrease();
+    error AssetToken__ExhangeRateCanOnlyIncrease(uint256 oldExchangeRate, uint256 newExchangeRate);
 
     using SafeERC20 for IERC20;
 
@@ -22,6 +22,7 @@ contract AssetToken is ERC20 {
     // means 1 asset token is worth 2 underlying tokens
     uint256 private s_exchangeRate;
     uint256 public constant EXCHANGE_RATE_PRECISION = 1e18;
+    uint256 private constant STARTING_EXCHANGE_RATE = 1e18;
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
@@ -44,6 +45,7 @@ contract AssetToken is ERC20 {
     constructor(address thunderLoan, IERC20 underlying, string memory name, string memory symbol) ERC20(name, symbol) {
         i_thunderLoan = thunderLoan;
         i_underlying = underlying;
+        s_exchangeRate = STARTING_EXCHANGE_RATE;
     }
 
     function mint(address to, uint256 amount) external onlyThunderLoan {
@@ -70,7 +72,7 @@ contract AssetToken is ERC20 {
         uint256 newExchangeRate = s_exchangeRate * (totalSupply() + fee) / totalSupply();
 
         if (newExchangeRate <= s_exchangeRate) {
-            revert AssetToken__ExhangeRateCanOnlyIncrease();
+            revert AssetToken__ExhangeRateCanOnlyIncrease(s_exchangeRate, newExchangeRate);
         }
         s_exchangeRate = newExchangeRate;
         emit ExchangeRateUpdated(s_exchangeRate);

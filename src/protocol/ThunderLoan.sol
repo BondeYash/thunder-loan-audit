@@ -76,11 +76,12 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, OracleUpgradeable {
     error ThunderLoan__NotAllowedToken(IERC20 token);
     error ThunderLoan__CantBeZero();
-    error ThunderLoan__NotPaidBack();
-    error ThunderLoan__NotEnoughTokenBalance();
+    error ThunderLoan__NotPaidBack(uint256 expectedEndingBalance, uint256 endingBalance);
+    error ThunderLoan__NotEnoughTokenBalance(uint256 startingBalance, uint256 amount);
     error ThunderLoan__CallerIsNotContract();
     error ThunderLoan__AlreadyAllowed();
     error ThunderLoan__ExhangeRateCanOnlyIncrease();
+    error ThunderLoan__NotCurrentlyFlashLoaning();
 
     using SafeERC20 for IERC20;
     using Address for address;
@@ -89,17 +90,18 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
     mapping(IERC20 => AssetToken) public s_tokenToAssetToken;
-    uint256 public s_feesCollected;
 
     // The fee in WEI, it should have 18 decimals. Each flash loan takes a flat fee of the token price.
-    uint256 public s_flashloanFee;
+    uint256 public constant FLASH_LOAN_FEE = 3e15; // 0.3% ETH fee
     uint256 public constant FEE_PRECISION = 1e18;
+
+    mapping(IERC20 token => bool currentlyFlashLoaning) private s_currentlyFlashLoaning;
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
     event Deposit(address indexed account, IERC20 indexed token, uint256 amount);
-    event AllowedTokenSet(IERC20 indexed token, bool allowed);
+    event AllowedTokenSet(IERC20 indexed token, AssetToken indexed asset, bool allowed);
     event Redeemed(
         address indexed account, IERC20 indexed token, uint256 amountOfAssetToken, uint256 amountOfUnderlying
     );
@@ -116,7 +118,7 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
     }
 
     modifier revertIfNotAllowedToken(IERC20 token) {
-        if (address(s_tokenToAssetToken[token]) == address(0)) {
+        if (!isAllowedToken(token)) {
             revert ThunderLoan__NotAllowedToken(token);
         }
         _;
@@ -172,24 +174,24 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
     }
 
     function flashloan(address receiverAddress, IERC20 token, uint256 amount, bytes calldata params) external {
-        uint256 startingBalance = IERC20(token).balanceOf(address(this));
+        AssetToken assetToken = s_tokenToAssetToken[token];
+        uint256 startingBalance = IERC20(token).balanceOf(address(assetToken));
 
         if (amount > startingBalance) {
-            revert ThunderLoan__NotEnoughTokenBalance();
+            revert ThunderLoan__NotEnoughTokenBalance(startingBalance, amount);
         }
 
         if (!receiverAddress.isContract()) {
             revert ThunderLoan__CallerIsNotContract();
         }
 
-        uint256 valueOfBorrowedToken = (amount * getPriceInWeth(address(token))) / FEE_PRECISION;
-        uint256 fee = (valueOfBorrowedToken * s_flashloanFee) / FEE_PRECISION;
-        AssetToken assetToken = s_tokenToAssetToken[token];
+        uint256 fee = getCalculatedFee(token, amount);
         assetToken.updateExchangeRate(fee);
 
         emit FlashLoan(receiverAddress, token, amount, fee, params);
 
-        token.transfer(receiverAddress, amount);
+        s_currentlyFlashLoaning[token] = true;
+        assetToken.transferUnderlyingTo(receiverAddress, amount);
         receiverAddress.functionCall(
             abi.encodeWithSignature(
                 "executeOperation(address,uint256,uint256,address,bytes)",
@@ -201,13 +203,22 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
             )
         );
 
-        uint256 endingBalance = token.balanceOf(address(this));
+        uint256 endingBalance = token.balanceOf(address(assetToken));
         if (endingBalance < startingBalance + fee) {
-            revert ThunderLoan__NotPaidBack();
+            revert ThunderLoan__NotPaidBack(startingBalance + fee, endingBalance);
         }
+        s_currentlyFlashLoaning[token] = false;
     }
 
-    function setAllowedToken(IERC20 token, bool allowed) external onlyOwner {
+    function repay(IERC20 token, uint256 amount) public {
+        if (!s_currentlyFlashLoaning[token]) {
+            revert ThunderLoan__NotCurrentlyFlashLoaning();
+        }
+        AssetToken assetToken = s_tokenToAssetToken[IERC20(token)];
+        token.safeTransferFrom(msg.sender, address(assetToken), amount);
+    }
+
+    function setAllowedToken(IERC20 token, bool allowed) external onlyOwner returns (AssetToken) {
         if (allowed) {
             if (address(s_tokenToAssetToken[token]) != address(0)) {
                 revert ThunderLoan__AlreadyAllowed();
@@ -216,9 +227,31 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
             string memory symbol = string.concat("tl", IERC20Metadata(address(token)).symbol());
             AssetToken assetToken = new AssetToken(address(this), token, name, symbol);
             s_tokenToAssetToken[token] = assetToken;
+            emit AllowedTokenSet(token, assetToken, allowed);
+            return assetToken;
         } else {
+            AssetToken assetToken = s_tokenToAssetToken[token];
             delete s_tokenToAssetToken[token];
+            emit AllowedTokenSet(token, assetToken, allowed);
+            return assetToken;
         }
+    }
+
+    function getCalculatedFee(IERC20 token, uint256 amount) public view returns (uint256 fee) {
+        uint256 valueOfBorrowedToken = (amount * getPriceInWeth(address(token))) / FEE_PRECISION;
+        fee = (valueOfBorrowedToken * FLASH_LOAN_FEE) / FEE_PRECISION;
+    }
+
+    function isAllowedToken(IERC20 token) public view returns (bool) {
+        return address(s_tokenToAssetToken[token]) != address(0);
+    }
+
+    function getAssetFromToken(IERC20 token) public view returns (AssetToken) {
+        return s_tokenToAssetToken[token];
+    }
+
+    function isCurrentlyFlashLoaning(IERC20 token) public view returns (bool) {
+        return s_currentlyFlashLoaning[token];
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner { }
