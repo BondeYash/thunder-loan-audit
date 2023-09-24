@@ -8,6 +8,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 contract AssetToken is ERC20 {
     error AssetToken__onlyThunderLoan();
     error AssetToken__ExhangeRateCanOnlyIncrease(uint256 oldExchangeRate, uint256 newExchangeRate);
+    error AssetToken__ZeroAddress();
 
     using SafeERC20 for IERC20;
 
@@ -39,10 +40,26 @@ contract AssetToken is ERC20 {
         _;
     }
 
+    modifier revertIfZeroAddress(address someAddress) {
+        if (someAddress == address(0)) {
+            revert AssetToken__ZeroAddress();
+        }
+        _;
+    }
+
     /*//////////////////////////////////////////////////////////////
                                FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-    constructor(address thunderLoan, IERC20 underlying, string memory name, string memory symbol) ERC20(name, symbol) {
+    constructor(
+        address thunderLoan,
+        IERC20 underlying,
+        string memory assetName,
+        string memory assetSymbol
+    )
+        ERC20(assetName, assetSymbol)
+        revertIfZeroAddress(thunderLoan)
+        revertIfZeroAddress(address(underlying))
+    {
         i_thunderLoan = thunderLoan;
         i_underlying = underlying;
         s_exchangeRate = STARTING_EXCHANGE_RATE;
@@ -64,7 +81,7 @@ contract AssetToken is ERC20 {
         // 1. Get the current exchange rate
         // 2. How big the fee is should be divided by the total supply
         // 3. So if the fee is 1e18, and the total supply is 2e18, the exchange rate be multiplied by 1.5
-        // if the fee is 0.5 ETH, and the total supply is 4, the exchange rate should be multipleid by 1.125
+        // if the fee is 0.5 ETH, and the total supply is 4, the exchange rate should be multiplied by 1.125
         // it should always go up, never down
         // newExchangeRate = oldExchangeRate * (totalSupply + fee) / totalSupply
         // newExchangeRate = 1 (4 + 0.5) / 4

@@ -64,16 +64,16 @@
 pragma solidity 0.8.20;
 
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { AssetToken } from "./AssetToken.sol";
+import { AssetToken } from "../protocol/AssetToken.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { OracleUpgradeable } from "./OracleUpgradeable.sol";
+import { OracleUpgradeable } from "../protocol/OracleUpgradeable.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
-contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, OracleUpgradeable {
+contract ThunderLoanUpgraded is Initializable, OwnableUpgradeable, UUPSUpgradeable, OracleUpgradeable {
     error ThunderLoan__NotAllowedToken(IERC20 token);
     error ThunderLoan__CantBeZero();
     error ThunderLoan__NotPaidBack(uint256 expectedEndingBalance, uint256 endingBalance);
@@ -93,8 +93,8 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
     mapping(IERC20 => AssetToken) public s_tokenToAssetToken;
 
     // The fee in WEI, it should have 18 decimals. Each flash loan takes a flat fee of the token price.
-    uint256 private s_feePrecision;
     uint256 private s_flashLoanFee; // 0.3% ETH fee
+    uint256 public constant FEE_PRECISION = 1e18;
 
     mapping(IERC20 token => bool currentlyFlashLoaning) private s_currentlyFlashLoaning;
 
@@ -140,7 +140,6 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
         __Ownable_init();
         __UUPSUpgradeable_init();
         __Oracle_init(tswapAddress);
-        s_feePrecision = 1e18;
         s_flashLoanFee = 3e15; // 0.3% ETH fee
     }
 
@@ -244,13 +243,13 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
 
     function getCalculatedFee(IERC20 token, uint256 amount) public view returns (uint256 fee) {
         //slither-disable-next-line divide-before-multiply
-        uint256 valueOfBorrowedToken = (amount * getPriceInWeth(address(token))) / s_feePrecision;
+        uint256 valueOfBorrowedToken = (amount * getPriceInWeth(address(token))) / FEE_PRECISION;
         //slither-disable-next-line divide-before-multiply
-        fee = (valueOfBorrowedToken * s_flashLoanFee) / s_feePrecision;
+        fee = (valueOfBorrowedToken * s_flashLoanFee) / FEE_PRECISION;
     }
 
     function updateFlashLoanFee(uint256 newFee) external onlyOwner {
-        if (newFee > s_feePrecision) {
+        if (newFee > FEE_PRECISION) {
             revert ThunderLoan__BadNewFee();
         }
         s_flashLoanFee = newFee;
@@ -270,10 +269,6 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
 
     function getFee() external view returns (uint256) {
         return s_flashLoanFee;
-    }
-
-    function getFeePrecision() external view returns (uint256) {
-        return s_feePrecision;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner { }
