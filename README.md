@@ -50,7 +50,7 @@ Users additionally have to pay a small fee to the protocol depending on how much
 ```
 git clone https://github.com/Cyfrin/6-thunder-loan-audit
 cd 6-thunder-loan-audit
-make install
+make 
 ```
 
 ### Optional Gitpod
