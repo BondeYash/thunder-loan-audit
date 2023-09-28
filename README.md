@@ -1,5 +1,12 @@
 # Thunder Loan
 
+<br/>
+<p align="center">
+<img src="./banner.png" width="700" alt="thunder-loans">
+</p>
+<br/>
+
+
 A flash loan protocol based on [Aave](https://aave.com/) and [Compound](https://compound.finance/).
 
 
