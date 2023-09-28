@@ -36,6 +36,8 @@ A flash loan is a loan that exists for exactly 1 transaction. A user can borrow 
 
 Users additionally have to pay a small fee to the protocol depending on how much money they borrow. 
 
+We are planning to upgrade from the current `ThunderLoan` contract to the `ThunderLoanUpgraded` contract. Please include this upgrade in scope of a security review. 
+
 # Getting Started
 
 ## Requirements
