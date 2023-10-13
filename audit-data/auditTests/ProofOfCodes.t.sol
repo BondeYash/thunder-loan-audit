@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import { Test, console } from "forge-std/Test.sol";
 import { ThunderLoanTest, ThunderLoan } from "../unit/ThunderLoanTest.t.sol";
-import { ERC20Mock } from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
+import { ERC20Mock } from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { ThunderLoanUpgraded } from "../../src/upgradedProtocol/ThunderLoanUpgraded.sol";
@@ -16,7 +16,7 @@ contract ProofOfCodes is ThunderLoanTest {
         uint256 feeBeforeUpgrade = thunderLoan.getFee();
         vm.startPrank(thunderLoan.owner());
         ThunderLoanUpgraded upgraded = new ThunderLoanUpgraded();
-        thunderLoan.upgradeTo(address(upgraded));
+        thunderLoan.upgradeToAndCall(address(upgraded),"");
         uint256 feeAfterUpgrade = thunderLoan.getFee();
         vm.stopPrank();
 
@@ -47,7 +47,7 @@ contract ProofOfCodes is ThunderLoanTest {
 
         address tswapPool = pf.getPool(address(tokenA));
 
-        // Overright the WETH address
+        // Overwrite the WETH address
         deployCodeTo("ERC20Mock.sol:ERC20Mock", address(TSwapPool(tswapPool).WETH_TOKEN()));
         weth = ERC20Mock(address(TSwapPool(tswapPool).WETH_TOKEN()));
 
