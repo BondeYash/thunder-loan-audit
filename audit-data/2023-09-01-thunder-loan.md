@@ -364,3 +364,15 @@ File: src/protocol/ThunderLoan.sol
 96:     uint256 public constant FEE_PRECISION = 1e18;
 
 ```
+
+### [GAS-3] Unnecessary SLOAD when logging new exchange rate
+
+In `AssetToken::updateExchangeRate`, after writing the `newExchangeRate` to storage, the function reads the value from storage again to log it in the `ExchangeRateUpdated` event. 
+
+To avoid the unnecessary SLOAD, you can log the value of `newExchangeRate`.
+
+```diff
+  s_exchangeRate = newExchangeRate;
+- emit ExchangeRateUpdated(s_exchangeRate);
++ emit ExchangeRateUpdated(newExchangeRate);
+```
