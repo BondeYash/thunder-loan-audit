@@ -72,6 +72,7 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OracleUpgradeable } from "./OracleUpgradeable.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { IFlashLoanReceiver } from "../interfaces/IFlashLoanReceiver.sol";
 
 contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, OracleUpgradeable {
     error ThunderLoan__NotAllowedToken(IERC20 token);
@@ -177,7 +178,16 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
         assetToken.transferUnderlyingTo(msg.sender, amountUnderlying);
     }
 
-    function flashloan(address receiverAddress, IERC20 token, uint256 amount, bytes calldata params) external {
+    function flashloan(
+        address receiverAddress,
+        IERC20 token,
+        uint256 amount,
+        bytes calldata params
+    )
+        external
+        revertIfZero(amount)
+        revertIfNotAllowedToken(token)
+    {
         AssetToken assetToken = s_tokenToAssetToken[token];
         uint256 startingBalance = IERC20(token).balanceOf(address(assetToken));
 
@@ -199,14 +209,14 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
         assetToken.transferUnderlyingTo(receiverAddress, amount);
         // slither-disable-next-line unused-return reentrancy-vulnerabilities-2
         receiverAddress.functionCall(
-            abi.encodeWithSignature(
-                "executeOperation(address,uint256,uint256,address,bytes)",
+            abi.encodeCall(
+                IFlashLoanReceiver.executeOperation, (
                 address(token),
                 amount,
                 fee,
-                msg.sender,
+                msg.sender, // initiator
                 params
-            )
+            ))
         );
 
         uint256 endingBalance = token.balanceOf(address(assetToken));
@@ -220,7 +230,7 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
         if (!s_currentlyFlashLoaning[token]) {
             revert ThunderLoan__NotCurrentlyFlashLoaning();
         }
-        AssetToken assetToken = s_tokenToAssetToken[IERC20(token)];
+        AssetToken assetToken = s_tokenToAssetToken[token];
         token.safeTransferFrom(msg.sender, address(assetToken), amount);
     }
 
