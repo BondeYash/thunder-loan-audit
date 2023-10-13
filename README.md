@@ -26,7 +26,7 @@ A flash loan protocol based on [Aave](https://aave.com/) and [Compound](https://
 The ⚡️ThunderLoan⚡️ protocol is meant to do the following:
 
 1. Give users a way to create flash loans
-2. Give liquidity providres a way to earn money off their capital
+2. Give liquidity providers a way to earn money off their capital
 
 Liquidity providers can `deposit` assets into `ThunderLoan` and be given `AssetTokens` in return. These `AssetTokens` gain interest over time depending on how often people take out flash loans!
 
