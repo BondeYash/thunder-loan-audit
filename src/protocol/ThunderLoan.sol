@@ -137,7 +137,7 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
                            EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
     function initialize(address tswapAddress) external initializer {
-        __Ownable_init();
+        __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         __Oracle_init(tswapAddress);
         s_feePrecision = 1e18;
@@ -185,7 +185,7 @@ contract ThunderLoan is Initializable, OwnableUpgradeable, UUPSUpgradeable, Orac
             revert ThunderLoan__NotEnoughTokenBalance(startingBalance, amount);
         }
 
-        if (!receiverAddress.isContract()) {
+        if (receiverAddress.code.length == 0) {
             revert ThunderLoan__CallerIsNotContract();
         }
 
