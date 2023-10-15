@@ -2,7 +2,7 @@
 
 <br/>
 <p align="center">
-<img src="./banner.png" width="700" alt="thunder-loans">
+<img src="./thunder-loan.svg" width="700" alt="thunder-loans">
 </p>
 <br/>
 
