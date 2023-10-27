@@ -100,3 +100,9 @@ forge coverage --report debug
 ```
 - Solc Version: 0.8.20
 - Chain(s) to deploy contract to: Ethereum
+
+## Roles
+
+- Owner: The owner of the protocol who has the power to upgrade the implementation. 
+- Liquidity Provider: A user who deposits assets into the protocol to earn interest. 
+- User: A user who takes out flash loans from the protocol.
