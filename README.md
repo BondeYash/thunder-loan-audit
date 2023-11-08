@@ -22,6 +22,7 @@ You can learn more about how [Aave works](https://www.youtube.com/watch?v=dTCwss
     - [Test Coverage](#test-coverage)
 - [Audit Scope Details](#audit-scope-details)
   - [Roles](#roles)
+  - [Known Issues](#known-issues)
 
 # About 
 
@@ -82,25 +83,34 @@ forge coverage --report debug
 - Commit Hash: 026da6e73fde0dd0a650d623d0411547e3188909
 - In Scope:
 ```
-#-- interfaces
-|   #-- IFlashLoanReceiver.sol
-|   #-- IPoolFactory.sol
-|   #-- ITSwapPool.sol
-|   #-- IThunderLoan.sol
-#-- protocol
-|   #-- AssetToken.sol
-|   #-- OracleUpgradeable.sol
-|   #-- ThunderLoan.sol
-#-- upgradedProtocol
-    #-- ThunderLoanUpgraded.sol
+├── interfaces
+│   ├── IFlashLoanReceiver.sol
+│   ├── IPoolFactory.sol
+│   ├── ITSwapPool.sol
+│   #── IThunderLoan.sol
+├── protocol
+│   ├── AssetToken.sol
+│   ├── OracleUpgradeable.sol
+│   #── ThunderLoan.sol
+#── upgradedProtocol
+    #── ThunderLoanUpgraded.sol
 ```
 - Solc Version: 0.8.20
 - Chain(s) to deploy contract to: Ethereum
-- Tokens to interact with:
-  - 
+- ERC20s:
+  - USDC 
+  - DAI
+  - LINK
+  - WETH
 
 ## Roles
 
 - Owner: The owner of the protocol who has the power to upgrade the implementation. 
 - Liquidity Provider: A user who deposits assets into the protocol to earn interest. 
 - User: A user who takes out flash loans from the protocol.
+
+## Known Issues
+
+- We are aware that `getCalculatedFee` can result in 0 fees for very small flash loans. We are OK with that. There is some small rounding errors when it comes to low fees
+- We are aware that the first depositor gets an unfair advantage in assetToken distribution. We will be making a large initial deposit to mitigate this, and this is a known issue
+- We are aware that "weird" ERC20s break the protocol, including fee-on-transfer, rebasing, and ERC-777 tokens. The owner will vet any additional tokens before adding them to the protocol. 
