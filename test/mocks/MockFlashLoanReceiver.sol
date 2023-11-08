@@ -46,7 +46,7 @@ contract MockFlashLoanReceiver {
         return true;
     }
 
-    function getbalanceDuring() external view returns (uint256) {
+    function getBalanceDuring() external view returns (uint256) {
         return s_balanceDuringFlashLoan;
     }
 

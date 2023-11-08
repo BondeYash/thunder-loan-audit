@@ -84,7 +84,7 @@ contract ThunderLoanTest is BaseTest {
         thunderLoan.flashloan(address(mockFlashLoanReceiver), tokenA, amountToBorrow, "");
         vm.stopPrank();
 
-        assertEq(mockFlashLoanReceiver.getbalanceDuring(), amountToBorrow + AMOUNT);
+        assertEq(mockFlashLoanReceiver.getBalanceDuring(), amountToBorrow + AMOUNT);
         assertEq(mockFlashLoanReceiver.getBalanceAfter(), AMOUNT - calculatedFee);
     }
 }

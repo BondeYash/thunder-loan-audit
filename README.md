@@ -7,7 +7,9 @@
 <br/>
 
 
-A flash loan protocol based on [Aave](https://aave.com/) and [Compound](https://compound.finance/).
+*A flash loan protocol based on [Aave](https://aave.com/) and [Compound](https://compound.finance/).*
+
+You can learn more about how [Aave works](https://www.youtube.com/watch?v=dTCwssZ116A) at a high level from [this video](https://www.youtube.com/watch?v=dTCwssZ116A).
 
 
 - [Thunder Loan](#thunder-loan)
@@ -15,11 +17,11 @@ A flash loan protocol based on [Aave](https://aave.com/) and [Compound](https://
 - [Getting Started](#getting-started)
   - [Requirements](#requirements)
   - [Quickstart](#quickstart)
-    - [Optional Gitpod](#optional-gitpod)
 - [Usage](#usage)
   - [Testing](#testing)
     - [Test Coverage](#test-coverage)
 - [Audit Scope Details](#audit-scope-details)
+  - [Roles](#roles)
 
 # About 
 
@@ -55,12 +57,6 @@ cd 6-thunder-loan-audit
 make 
 ```
 
-### Optional Gitpod
-
-If you can't or don't want to run and install locally, you can work with this repo in Gitpod. If you do this, you can skip the `clone this repo` part.
-
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#github.com/Cyfrin/6-thunder-loan-audit)
-
 # Usage
 
 ## Testing
@@ -86,20 +82,22 @@ forge coverage --report debug
 - Commit Hash: 026da6e73fde0dd0a650d623d0411547e3188909
 - In Scope:
 ```
-├── interfaces
-│   ├── IFlashLoanReceiver.sol
-│   ├── IPoolFactory.sol
-│   ├── ITSwapPool.sol
-│   #── IThunderLoan.sol
-├── protocol
-│   ├── AssetToken.sol
-│   ├── OracleUpgradeable.sol
-│   #── ThunderLoan.sol
-#── upgradedProtocol
-    #── ThunderLoanUpgraded.sol
+#-- interfaces
+|   #-- IFlashLoanReceiver.sol
+|   #-- IPoolFactory.sol
+|   #-- ITSwapPool.sol
+|   #-- IThunderLoan.sol
+#-- protocol
+|   #-- AssetToken.sol
+|   #-- OracleUpgradeable.sol
+|   #-- ThunderLoan.sol
+#-- upgradedProtocol
+    #-- ThunderLoanUpgraded.sol
 ```
 - Solc Version: 0.8.20
 - Chain(s) to deploy contract to: Ethereum
+- Tokens to interact with:
+  - 
 
 ## Roles
 
