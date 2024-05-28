@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Thunder Loan
 
 <br/>
@@ -114,3 +115,7 @@ forge coverage --report debug
 - We are aware that `getCalculatedFee` can result in 0 fees for very small flash loans. We are OK with that. There is some small rounding errors when it comes to low fees
 - We are aware that the first depositor gets an unfair advantage in assetToken distribution. We will be making a large initial deposit to mitigate this, and this is a known issue
 - We are aware that "weird" ERC20s break the protocol, including fee-on-transfer, rebasing, and ERC-777 tokens. The owner will vet any additional tokens before adding them to the protocol. 
+=======
+# thunder-loan-audit
+A practice audit file
+>>>>>>> origin/main
